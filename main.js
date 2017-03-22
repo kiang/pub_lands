@@ -136,7 +136,6 @@ function onLayerClick(e) {
                 if (targetLayer.getSource().getState() === 'ready') {
                   cityLayer.setVisible(false);
                   map.getView().setCenter(e.coordinate);
-                  map.getView().setZoom(12);
                 }
             });
             map.addLayer(targetLayer);
