@@ -30,8 +30,8 @@ foreach (glob($basePath . '/raw/*/*/*.xml') AS $xmlFile) {
     }
 }
 
-$countMissing = 0;
-
+$fh = fopen($basePath . '/tmp/missing.csv', 'w');
+fputcsv($fh, array('city', 'section', 'land no'));
 foreach (glob($basePath . '/raw/*/*/*.kml') AS $xmlFile) {
     $p = pathinfo($xmlFile);
     $pParts = explode('/', $p['dirname']);
@@ -54,11 +54,10 @@ foreach (glob($basePath . '/raw/*/*/*.kml') AS $xmlFile) {
         $geo = geoPHP::load($p->asXML(), 'kml');
         $targetFile = $path . '/' . $key . '.json';
         if (!file_exists($targetFile)) {
-
             $f = new stdClass();
             $f->type = 'Feature';
             if (!isset($pool[$key])) {
-                ++$countMissing;
+              fputcsv($fh, array($cityCode, (string)$c->Document->name, (string)$p->name));
                 $f->properties = new stdClass();
             } else {
                 $f->properties = $pool[$key];
@@ -79,8 +78,6 @@ foreach (glob($basePath . '/raw/*/*/*.kml') AS $xmlFile) {
         error_log($key);
     }
 }
-
-error_log($countMissing . " missing");
 
 // foreach(glob($basePath . '/*_*.zip') AS $zipFile) {
 //   exec("unzip {$zipFile}");
