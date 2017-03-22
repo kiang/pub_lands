@@ -57,14 +57,33 @@ var baseLayer = new ol.layer.Tile({
 });
 
 var mapLayers = [baseLayer];
-var cityLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({
-        url: 'json/city.topo.json',
-        format: new ol.format.TopoJSON()
-    }),
-    style: layerStyle
+var cityLayer, cityList;
+$.getJSON('json/city_list.json', function(r) {
+  cityList = r;
+  cityLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({
+          url: 'json/city.topo.json',
+          format: new ol.format.TopoJSON()
+      }),
+      style: function(f) {
+        var p = f.getProperties(), targetCode = '';
+        switch(p.COUNTYCODE) {
+          case '10018':
+          case '10020':
+            targetCode = p.COUNTYCODE;
+            break;
+          default:
+            targetCode = p.TOWNCODE;
+        }
+        if(cityList[targetCode]) {
+          return redStyle;
+        }
+        return layerStyle;
+      }
+  });
+  map.addLayer(cityLayer);
 });
-mapLayers.push(cityLayer);
+
 var map = new ol.Map({
     layers: mapLayers,
     target: 'map',
@@ -113,10 +132,14 @@ function onLayerClick(e) {
                 }),
                 style: layerStyle
             });
+            targetLayer.on('change', function () {
+                if (targetLayer.getSource().getState() === 'ready') {
+                  cityLayer.setVisible(false);
+                  map.getView().setCenter(e.coordinate);
+                  map.getView().setZoom(12);
+                }
+            });
             map.addLayer(targetLayer);
-            cityLayer.setVisible(false);
-            map.getView().setCenter(e.coordinate);
-            map.getView().setZoom(12);
         } else {
           if(lastFeature) {
             lastFeature.setStyle(layerStyle);
